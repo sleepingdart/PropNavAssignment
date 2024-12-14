@@ -16,8 +16,11 @@ state[6] = target velocity, y axis
 state[7] = pursuer velocity, x axis
 state[8] = pursuer velocity, y axis
 
-Some assumptions made to make the system time-invariant for simplicity:
-mass of the pursuer and target does not change over time
+Some assumptions made for simplicity:
+mass of the pursuer and target does not change over time (time-invariant differential equations)
+target and pursuer are only subject to gravity as an external force
+no sensing or actuation dynamics involved; pursuer instantaneously measures its own state and angles to the target, and
+instantaneously achieves any control commands
 
 """
 
@@ -25,11 +28,11 @@ def eom_propnav(state,accel_T,N,theta_HE,accel_lim_P):
     import numpy as np
     # first calculate various angles relating the pursuer and target:
 
-    # Line of sight (LOS) angle:
+    # Line of sight (LOS) angle, based on target and pursuer coordinates
     dposx_TP = state[1]-state[3] # delta x position between target/pursuer
     dposy_TP = state[2]-state[4] # delta y position between target/pursuer
     theta_LOS = np.arctan(dposy_TP/dposx_TP)
-    # LOS rate of change:
+    # LOS rate of change
     dvelx_TP = state[5]-state[7] # delta x velocity between target/pursuer
     dvely_TP = state[6]-state[8] # delta y velocity between target/pursuer
     theta_dot_LOS = (dposx_TP*dvely_TP - dposy_TP*dvelx_TP) / np.square((np.hypot(dposx_TP,dposy_TP)))
@@ -42,6 +45,7 @@ def eom_propnav(state,accel_T,N,theta_HE,accel_lim_P):
     accel_P = N*np.hypot(state[7],state[8])*theta_dot_LOS
     # however, we're given a bound on how much acceleration the pursuer can achieve:
     if np.abs(accel_P) > accel_lim_P:
+        # saturate the pursuer's acceleration based on given input
         accel_P = np.sign(accel_P)*accel_lim_P
 
     # now calculate the state derivatives:

@@ -32,9 +32,11 @@ def RK4(ydot,y0,time):
         distance2target[i+1] = np.hypot(y[3,i]-y[1,i],y[4,i]-y[2,i])
 
     # find miss distance as the minimum distance between target and pursuer
+    # some input value combinations result in the pursuer not having enough time to reach the target;
+    # others the pursuer gets there really fast and then "overshoots" for the rest of the sim time
     miss_distance = np.min(distance2target)
 
-    # time index of the minimum miss distance
+    # time index of the minimum miss distance (i'm calling this the intercept point)
     m = np.argmin(distance2target)
 
     # calculate the lead angle at the intercept point
@@ -44,7 +46,9 @@ def RK4(ydot,y0,time):
     theta_LOS = np.arctan(dposy_TP/dposx_TP)
     # pursuer to target velocity magnitude ratio:
     gamma = np.hypot(y[7,m],y[8,m]) / np.hypot(y[5,m],y[6,m])
-    # lead angle:
+    # lead angle + heading error
+    # this is just to avoid passing in theta_HE unnecessarily here; return the summed value and let the main script
+    # subtract out theta_HE as needed
     theta_leadHE = np.arcsin(np.sin(y[0,m]+theta_LOS)/gamma)
 
     return y, miss_distance, theta_leadHE
